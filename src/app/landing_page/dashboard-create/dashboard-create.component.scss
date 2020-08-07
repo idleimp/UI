@@ -1,15 +1,13 @@
 nb-card {
-  background-color: black;
+  background-color: #2D2D2D;
   nb-card-header {
+    background-color: #2D2D2D;
     font-family: 'Lucida Grande', sans-serif;
     font-weight: 500;
     line-height: 1;
-    color: lightgray;
-    h4 {
-      color: lightgray;
-    }
   }
-  nb-select {
-    width: 25em;
+
+  select {
+    width: 30em;
   }
 }

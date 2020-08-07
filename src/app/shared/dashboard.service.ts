@@ -16,11 +16,15 @@ export class DashboardService {
 
   private dashboardAuditRoute = '/apiaudit/auditresult/dashboard/title/';
 
-  private dashboardSubject = new ReplaySubject<any>(1);
+  private dashboardCountRoute = '/api/dashboard/count/';
+
+  dashboardSubject = new ReplaySubject<any>(1);
 
   private dashboardAuditSubject = new ReplaySubject<any>(1);
 
   public dashboardQualitySubject = new ReplaySubject<any>(1);
+
+  private dashboardCountSubject = new ReplaySubject<any>(2);
 
   private dashboardRefreshSubject = new Subject<any>();
 
@@ -34,19 +38,27 @@ export class DashboardService {
 
   public dashboardAuditConfig$ = this.dashboardAuditSubject.asObservable().pipe(filter(result => result));
 
+  public dashboardCountConfig$ = this.dashboardCountSubject.asObservable().pipe(filter(result => result));
+
   public dashboardQualityConfig$ = this.dashboardQualitySubject.asObservable().pipe(filter(result => result));
 
   public dashboardRefresh$ = this.dashboardRefreshSubject.asObservable();
 
   constructor(private http: HttpClient) { }
 
-  // Retrieve a new dashboard from the API, and push it to subscribers
-  loadDashboard(dashboardId: string) {
+  // Get dashboard by id
+  getDashboard(dashboardId: string): Observable<any> {
     this.dashboardId = dashboardId;
-    this.http.get(this.dashboardRoute + dashboardId).subscribe(res => this.dashboardSubject.next(res));
+    return this.http.get(this.dashboardRoute + dashboardId);
+  }
+
+  loadDashboardAudits() {
     this.dashboardConfig$.pipe(map(dashboard => dashboard)).subscribe(dashboard => {
       this.http.get<IAuditResult[]>(this.dashboardAuditRoute + dashboard.title).subscribe(res => this.dashboardAuditSubject.next(res));
     });
+  }
+
+  subscribeDashboardRefresh() {
     this.dashboardRefreshSubscription = interval(1000 * this.REFRESH_INTERVAL_SECONDS).pipe(
       startWith(-1)).subscribe(res => this.dashboardRefreshSubject.next(res));
   }
@@ -176,5 +188,12 @@ export class DashboardService {
   createDashboard(data: any): Observable<any> {
     const httpOptions = { headers: new HttpHeaders({ 'Content-Type':  'application/json'})};
     return this.http.post(this.dashboardRoute, data, httpOptions);
+  }
+
+  loadCounts() {
+    ['Team', 'Product'].forEach(type => {
+      this.http.get(this.dashboardCountRoute + type)
+        .subscribe(count => this.dashboardCountSubject.next({ name: type, value: count }));
+    });
   }
 }
